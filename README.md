@@ -1,6 +1,6 @@
-#APICloudLiveDemo
+# APICloudLiveDemo
 此项目是使用亲加APICloud SDK开发的直播Demo，包括了直播，美颜，连麦等功能  
-##亲加通讯云模块的使用
+## 亲加通讯云模块的使用
 亲加通讯云包括了基础模块（gotyeLiveCore）、聊天室模块（gotyeLiveChat）、播放器模块（gotyeLivePlayer）、直播模块（gotyeLivePublisher）、连麦模块（gotyeLiveP2P）共五大模块，用户的角色，需要用到的模块也不同；
  ![image](https://github.com/QPlus/APICloudLiveDemo/raw/master/MDImages/modulelist.png)
 
@@ -26,6 +26,8 @@
 1. 在config.xml文件中添加模块配置
  ![image](https://github.com/QPlus/APICloudLiveDemo/raw/master/MDImages/config.png)
 2. 直播页面开发
+
+
  ![image](https://github.com/QPlus/APICloudLiveDemo/raw/master/MDImages/filelist.png)
    
    上图为demo的工程结构，通过html目录可以看到，分别有p2p、player、player_mask、publisher、publisher_mask四个html文件。通过上面的模块说明，我们知道player和player_mask是针对助理及开发者的，publisher和publisher_mask是针对主播的。
