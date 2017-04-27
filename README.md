@@ -34,10 +34,10 @@
    以player为例，player.html页面用来展示直播画面，通过gotyeLivePlayer的play接口的playView参数指定，该页需提前open，并且为frame类型。而player_mask.html用来展示直播画面的遮罩层的功能，比如观看人数、清晰度切换、聊天内容、发送聊天等。gotyeLivePlayer所有的接口都可在player_mask.html里调用
    
 3. 连麦
-	连麦的请求发起及回应，可通过gotyeLiveChat的sendMessage接口来实现。开发者需通过该接口的text及extra参数设置好内容，然后在消息监听里做判断及处理
+    连麦的请求发起及回应，可通过gotyeLiveChat的sendMessage接口来实现。开发者需通过该接口的text及extra参数设置好内容，然后在消息监听里做判断及处理
 	
 4. 其他
-	demo代码里只是展示了亲加通讯云的主要功能，开发者们可根据实际业务需要自行使用其它接口
+    demo代码里只是展示了亲加通讯云的主要功能，开发者们可根据实际业务需要自行使用其它接口
     
 
  
