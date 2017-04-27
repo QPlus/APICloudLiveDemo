@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>播放</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/gotye.css"/>
+    <style>
+    	body{
+        	background:transparent;
+        }
+        
+    </style>
+</head>
+<body>
+	<div class="mask" tapmode onclick="resetmask();"></div>
+	<div class="viewer-count"><img src="../image/viewer.png" /><font id="viewerCount"></font></div>
+	
+	<div class="quality" id="quality" tapmode onclick="onQualityClick();event.cancelBubble=true;">流畅<i class="aui-iconfont aui-icon-down aui-margin-l-10"></i></div>
+	<div class="quality-option" id="qualityOption">
+		<div class="quality-option-item" tapmode onclick="onQualityItemClick(this);event.cancelBubble=true;">流畅</div>
+		<div class="quality-option-item" tapmode onclick="onQualityItemClick(this);event.cancelBubble=true;">标清</div>
+		<div class="quality-option-item" style="border-bottom: none;" tapmode onclick="onQualityItemClick(this);event.cancelBubble=true;">高清</div>
+	</div>
+	
+	<div class="p2p-cancel" id="p2pCancel" tapmode onclick="cancelP2P();event.cancelBubble=true;">取消连麦</div>
+	
+	<div class="chart-list" id="chartList"></div>
+	
+	<div class="comment-btn" tapmode onclick="showChatInput()"><img class="btn-img" src="../image/comment.png" /></div>
+	<div class="close-btn" tapmode onclick="closeAlert()"><img class="btn-img" src="../image/close.png" /></div>
+	<div class="chart-input" id="chartInputBar"><input id="chartInput" type="text" autofocus="autofocus" placeholder="说点什么吧" onBlur="hideChatInput()"/></div>
+	<div class="chart-send-btn" id="sendBtn" tapmode onclick="sendChart();">发送</div>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/jquery.min.js"></script>
+<script type="text/javascript">
+	var session={};
+	var player,chat;
+	var quality;
+	var qualityOpen=false;
+	var localId;
+	
+	apiready = function(){
+		api.parseTapmode();
+		
+		//设置session
+		session = {
+		    roomId: api.pageParam.roomId,
+		    password: api.pageParam.password,
+		    nickname: api.pageParam.nickname
+		};
+		
+		//观众视角，初始化播放器
+		insertChartContent('sys','系统','正在连接直播服务器...');
+		player = api.require('gotyeLivePlayer');
+		player.init({session:session});
+		player.play({
+			playView: "player",
+			rect:{
+			    x:0,             
+			    y:0,            
+			    w:api.frameWidth,           
+			    h:api.frameHeight          
+			}
+		});
+		//aspectFill表示保持比例撑满，视频会按照比例放大直到撑满屏幕为止
+		player.setDisplayMode({mode:'aspectFill'});
+		
+		//根据实际业务需求加入监听事件
+		player.addEventListener({
+		    name: 'connected'
+		}, function(ret, err){
+		    insertChartContent('sys','系统','连接直播服务器成功');
+		});
+		
+		player.addEventListener({
+		    name: 'disconnected'
+		}, function(ret, err){
+		    insertChartContent('sys','系统','直播服务器断开连接');
+		});
+                                   
+        player.addEventListener({
+        	name: 'error'
+    	}, function(ret, err){
+            insertChartContent('syserro','系统',ret.description);
+        });
+        
+        player.addEventListener({
+		    name: 'liveStart'
+		}, function(ret, err) {
+		    insertChartContent('sys','系统','直播开始');
+		});
+        
+        player.addEventListener({
+		    name: 'liveStop'
+		}, function(ret, err) {
+		    insertChartContent('sys','系统','直播结束');
+		});
+        
+		//初始化聊天信息
+		insertChartContent('sys','系统','正在连接聊天服务器...');
+		chat = api.require('gotyeLiveChat');
+		chat.init(session);
+		chat.login(function(ret, err) {
+		    if (ret) {
+		    	//获取登录后返回的account作为连麦所需要的localId
+		    	localId=ret.account;
+		    	insertChartContent('sys','系统','连接聊天服务器成功');
+		    	//获取聊天室当前人数
+		        chat.getRoomMemberCount(function(ret, err) {
+				    if (ret) {
+				        //alert('count'+JSON.stringify(ret));
+				        $('#viewerCount').text(ret.count);
+				    }
+				});
+		    } else {
+		        insertChartContent('syserro','系统','连接聊天服务器失败');
+		    }
+		});		
+		
+		//监听收到的消息
+		chat.addEventListener({
+		    name: 'receiveMsg'
+		}, function(ret, err) {
+		    if(ret){
+		    	//alert(JSON.stringify(ret));
+		    	if(ret.extra=='invitep2p'){
+		    		if(ret.text==api.pageParam.nickname)
+		    			openP2P(ret.sendId);
+		    	}else if(ret.extra=='cancelp2p'){
+		    		if(ret.text==api.pageParam.nickname){
+		    			p2p.leaveRoom();
+						api.closeFrame({
+							name: 'p2p'
+				        });
+						$('#p2pCancel').hide();
+	    			}
+		    	}else
+		    		insertChartContent('user',ret.sendName,ret.text);
+		    }
+		});
+		
+		
+		chat.addEventListener({
+		    name: 'forceLogout'
+		}, function(ret, err) {
+		    api.alert({
+		    	msg:'您的账号在另外的设备登录，当前设备需强制踢下线',
+		    	buttons:['知道了']
+            },function(ret,err){
+            	if(ret.buttonIndex=='1'){
+            		close();
+            	}
+            });
+		});
+	};
+	
+	//往聊天区插入消息，或为系统消息或为用户发出的消息，根据type区分
+	function insertChartContent(type,sender,content){
+		if(type=='sys')
+			$('#chartList').append('<div class="chart-item sys-text">'+content+'</div>');
+		else if(type=='syserro')
+			$('#chartList').append('<div class="chart-item sys-text-erro">'+content+'</div>');
+		else if(type=='user')
+			$('#chartList').append('<div class="chart-item"><font class="aui-text-success">'+sender+'：</font>'+content+'</div>');
+		else
+			$('#chartList').append('<div class="chart-item"><font class="aui-text-danger">'+sender+'：</font>'+content+'</div>');
+		
+		//插入消息后自动滚动		
+		$('#chartList').animate({
+			scrollTop:$('#chartList').scrollTop()+50
+		}, 500);
+	}
+	
+	//清除房间验证信息，销毁session实例。退出直播间时调用
+	function destroyRoomSession(){		
+		var core = api.require('gotyeLiveCore');
+		core.destroyRoomSession(session);
+	}
+	
+	//退出时的询问
+	function closeAlert(){
+		var dialogBox = api.require('dialogBox');
+		dialogBox.alert({
+		    texts: {
+		        content: '确定要退出直播？',
+		        leftBtnTitle: '退出',
+		        rightBtnTitle: '取消'
+		    },
+		    styles: {
+		        bg: 'rgba(0,0,0,0.5)',
+		        corner: 5,
+		        w: 230,
+		        content: {
+		            color: '#FFFFFF',
+		            size: 14
+		        },
+		        left: {
+		            marginB: 15,
+		            marginL: 10,
+		            w: 80,
+		            h: 30,
+		            corner: 5,
+		            bg: '#9F61E8',
+		            color: '#FFFFFF',
+		            size: 12
+		        },
+		        right: {
+		            marginB: 15,
+		            marginL: 50,
+		            w: 80,
+		            h: 30,
+		            corner: 5,
+		            bg: '#DDDDDD',
+		            color: '#999999',
+		            size: 12
+		        }
+		    }
+		}, function(ret) {
+		    if (ret.eventType == 'left') {
+		        dialogBox.close({
+		            dialogName: 'alert'
+		        });
+		        close();
+		    }else if (ret.eventType == 'right') {
+		        dialogBox.close({
+		            dialogName: 'alert'
+		        });
+		    }
+		});
+	}
+	
+	//退出时执行的关闭或清楚操作
+	function close(){
+		//取消全屏
+		api.setFullScreen({
+		    fullScreen: false
+		});
+		//停止直播播放
+		player.stop();		
+		//登出聊天
+		chat.logout();
+		//销毁房间验证信息
+		destroyRoomSession();
+		//关闭连麦窗口，不管是否打开
+		api.closeFrame({
+			name: 'p2p'
+        });
+        //关闭播放窗口
+		api.closeFrame({
+			name: 'player'
+        });
+        //关闭播放遮罩窗口
+        api.closeFrame({
+			name: 'player_mask'
+        });
+	}
+	
+	//展开清晰度下拉框
+	function onQualityClick(){
+		if(!qualityOpen){
+			qualityOpen=true;
+			$('#qualityOption').show();
+		}else{
+			qualityOpen=false;
+			$('#qualityOption').hide();
+		}
+	}
+	
+	//选择清晰度
+	function onQualityItemClick(tag){		
+		if($(tag).text()=='流畅')
+			quality='low';
+		if($(tag).text()=='标清')
+			quality='medium';
+		else if($(tag).text()=='高清')
+			quality='high';
+		
+		//清晰度切换
+		player.switchToQuality({quality:quality});
+		
+		qualityOpen=false;
+		$('#qualityOption').hide();
+		$('#quality').html($(tag).text()+'<i class="aui-iconfont aui-icon-down aui-margin-l-10"></i>');
+		$('.quality-option-item').css('color','#FFFFFF');
+		$(tag).css('color','#e51c23');
+	}
+	
+	//显示聊天输入框，demo只是简单的用input作为演示，开发者们可根据自己的需求用功能更丰富的输入模块。
+	function showChatInput(){
+		var wInput=api.frameWidth-100;
+		$('#chartInputBar').show();
+		$('#sendBtn').show();
+		$('#chartInputBar').css('width',wInput+'px');
+		$('#chartInput').css('width',(wInput-20)+'px');
+	}
+	
+	//隐藏聊天输入框
+	function hideChatInput(){
+		$('#chartInputBar').hide();
+		$('#sendBtn').hide();
+	}
+	
+	//发送聊天信息
+	function sendChart(){
+		var content=$('#chartInput').val();
+		if(content == '' || content.match(/^\s+$/g)){
+			api.alert({
+				msg:'请输入聊天内容'
+            });
+            return;
+		}
+		chat.sendText({text: content}, function(ret, err) {
+		    if (err) {
+		        api.toast({
+				    msg: '发送失败',
+				    duration: 2000,
+				    location: 'bottom'
+				})
+		    }else{
+				insertChartContent('me',api.pageParam.nickname,content);
+				$('#chartInput').val('');
+		    }
+		});
+	}
+	
+	//点击屏幕其它区域后恢复默认状态，比如展开的清晰度选择变回收缩状态等
+	function resetmask(){
+		//聊天输入框
+		hideChatInput();
+		//清晰度
+		qualityOpen=false;
+		$('#qualityOption').hide();
+	}
+	
+	//打开连麦请求提示
+	function openP2P(remoteId){
+		var dialogBox = api.require('dialogBox');
+		dialogBox.alert({
+		    texts: {
+		        content: '主播邀请您语音是否接受？',
+		        leftBtnTitle: '接受',
+		        rightBtnTitle: '拒绝'
+		    },
+		    styles: {
+		        bg: 'rgba(0,0,0,0.5)',
+		        corner: 5,
+		        w: 230,
+		        content: {
+		            color: '#FFFFFF',
+		            size: 14
+		        },
+		        left: {
+		            marginB: 15,
+		            marginL: 10,
+		            w: 80,
+		            h: 30,
+		            corner: 5,
+		            bg: '#9F61E8',
+		            color: '#FFFFFF',
+		            size: 12
+		        },
+		        right: {
+		            marginB: 15,
+		            marginL: 50,
+		            w: 80,
+		            h: 30,
+		            corner: 5,
+		            bg: '#DDDDDD',
+		            color: '#999999',
+		            size: 12
+		        }
+		    }
+		}, function(ret) {
+		    if (ret.eventType == 'left') {	
+		    	//连麦模块里，iOS和Android的调用方式略有不同，所以做个区分。	
+		    	if(api.systemType=='ios'){    
+		    		//打开一个连麦小窗口，显示另一端的直播画面内容
+			    	api.openFrame({
+					    name: 'p2p',
+					    url: '../html/p2p.html',
+					    rect:{
+					        x: api.frameWidth-130,
+			                y: api.frameHeight-250,
+			                w: 120,
+			                h: 160
+					    },
+					    bounces: false,
+					    bgColor: 'rgba(0,0,0,0)',
+					    vScrollBarEnabled:false,
+					    hScrollBarEnabled:false
+					});
+					p2p = api.require('gotyeLiveP2P');
+					p2p.joinRoom({
+						roomId:api.pageParam.roomId,
+						localId:localId,
+						remoteId:remoteId,
+						localView:{
+							fixedOn:'player',
+							fixed:true
+						},
+						remoteView:{
+							fixedOn:'p2p',
+							fixed:true
+						}
+					});
+				}else{
+					p2p = api.require('gotyeLiveP2P');
+					p2p.joinRoom({
+						roomId:api.pageParam.roomId,
+						localId:localId,
+						remoteId:remoteId,
+						rendererView:{
+							fixedOn:'player',
+							fixed:true,
+							paddingBottom:30,
+							paddingRight:20,
+							ratio:0.5
+						}
+					});					
+				}
+				
+				//监听连麦相关的事件。
+				p2p.addEventListener({
+				    name: 'joinedRoom'
+				}, function(ret, err) {
+					insertChartContent('sys','系统','连麦-加入房间成功');
+					//连麦成功后显示取消连麦按钮
+					$('#p2pCancel').show();
+				});
+				
+				p2p.addEventListener({
+				    name: 'connected'
+				}, function(ret, err) {
+					insertChartContent('sys','系统','连麦-建立连接成功');
+				});
+				
+				p2p.addEventListener({
+				    name: 'disconnected'
+				}, function(ret, err) {
+					insertChartContent('sys','系统','连麦-断开连接');
+					//监听到连麦断开，则关闭连麦窗口
+					api.closeFrame({
+						name: 'p2p'
+			        });
+				});
+				
+				p2p.addEventListener({
+				    name: 'error'
+				}, function(ret, err) {
+					insertChartContent('sys','系统','连麦-错误'+ret.description);
+					api.closeFrame({
+						name: 'p2p'
+			        });
+				});
+				
+				//接受连麦邀请后，发送一个接受的消息给主播端，然后主播端也调用joinRoom方法，加入连麦
+				chat.sendMessage({text: api.pageParam.nickname,extra:'inviteaccept'}, function(ret, err) {
+					if (err) {
+				        api.toast({
+						    msg: '连麦失败',
+						    duration: 2000,
+						    location: 'bottom'
+						})
+				    }
+				});
+				dialogBox.close({
+		            dialogName: 'alert'
+		        });
+		    }else if (ret.eventType == 'right') {
+		    	//拒绝连麦邀请后，发送一个拒绝的消息给主播端，通知直播已被拒绝
+		        chat.sendMessage({text: api.pageParam.nickname,extra:'inviterefuse'}, function(ret, err) {});
+				dialogBox.close({
+		            dialogName: 'alert'
+		        });
+		    }
+		});
+	}
+	
+	//取消连麦
+	function cancelP2P(){
+		chat.sendMessage({text: '取消连麦',extra:'cancelp2p'}, function(ret, err) {
+		    if (ret) {
+				p2p.leaveRoom();
+				api.closeFrame({
+					name: 'p2p'
+		        });
+				$('#p2pCancel').hide();
+		    }
+		});		
+	}
+	
+</script>
+</html>

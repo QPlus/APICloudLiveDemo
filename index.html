@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>首页</title>
+    <link rel="stylesheet" type="text/css" href="./css/aui.css"/>
+    <style>
+    	body{
+        	background: #FCAEAE;
+        }
+        .logo{
+        	margin: 5rem auto 3rem auto;
+        }
+        .enter-input{
+    		width:70%;
+    		height:2.2rem;
+    		margin-left: 15%;
+    		background: #FFFFFF;
+    		border-radius:0.25rem; 
+    		padding:0 0.5rem;
+    		margin-bottom: 0.75rem;
+    	}
+    	input[type="text"],
+    	input[type="password"],
+    	input[type="number"]{
+    		font-size:0.7rem;
+    	}
+    	.solidBtn{	
+			margin-top:2rem;		
+		    text-align: center;
+		    background: #F2F2F2;
+		    color: #FCAEAE;
+		    font-size: 0.8rem;              
+		    height:2.2rem;
+		    line-height: 2.2rem;       
+		    border-radius: 0.25rem;        
+		    width:70%;
+        	margin-left:15%; 
+		}
+    </style>
+</head>
+<body>
+	<div class="aui-content" id="content">
+		<img class="logo" src="image/logo.png" />
+		<div class="enter-input aui-border" style="margin-top: 2rem;">
+			<input type="number" id="roomId" placeholder="房间ID" value="2184314">
+		</div>
+	    <div class="enter-input aui-border">
+	    	<input type="text" id="password" placeholder="登录密码" value="1">
+	    </div>
+        <div class="enter-input aui-border">
+        	<input type="text" id="nickname" placeholder="昵称" value="主播">
+    	</div>
+    	<div class="solidBtn"  tapmode onClick="check();">登录</div>
+	</div>
+</body>
+</html>
+<script type="text/javascript" src="script/api.js"></script>
+<script type="text/javascript" src="script/jquery.min.js"></script>
+<script type="text/javascript">
+	var core;
+    apiready = function () {
+        $api.fixStatusBar( $api.dom('content') );
+        api.parseTapmode();
+        
+        //保持屏幕唤醒
+        api.setKeepScreenOn({
+		    keepOn: true
+		});
+    }
+    
+    function check(){
+		var roomId=$('#roomId').val();
+		var password=$('#password').val();
+		var nickname=$('#nickname').val();
+		
+		if(roomId == '' || roomId.match(/^\s+$/g)){
+			api.alert({msg:"请输入房间ID"});
+    		return;
+		}else if(password == '' || password.match(/^\s+$/g)){
+			api.alert({msg:"请输入登录密码"});
+    		return;
+		}else if(nickname == '' || nickname.match(/^\s+$/g)){
+			api.alert({msg:"请输入昵称"});
+    		return;
+		}
+		
+		//验证房间信息。session是对应一个直播房间的，验证通过才能获取直播间的信息
+		var session = {
+		    roomId: roomId,
+		    password: password,
+		    nickname: nickname
+		};
+		core = api.require('gotyeLiveCore');
+		core.setDebugLogEnabled({
+		    enabled: true
+		});
+		core.authRoomSession(session, function(ret, err){
+		    if(ret){
+				$('#roomId').blur();
+				$('#password').blur();
+				$('#nickname').blur();
+				//验证通过后打开直播画面页
+		        login(roomId,password,nickname,ret.role);
+		    }else{
+		        api.alert({msg:err.description});
+		    }
+		});
+	}
+	
+	function login(roomId,password,nickname,role){
+		
+		//根据角色判断，主播则打开主播页面，否则打开观众页面。1表示后台用户，2表示主播用户，3表示助理用户，4表示普通用户
+		var frmName='player';
+		var frmUrl='html/player.html';
+		if(role=='2'){
+			frmName='publisher';
+			frmUrl='html/publisher.html';			 
+		}
+		
+		//以frame类型打开，并且传入roomId、password、nickname
+		api.openFrame({
+		    name: frmName,
+		    url: frmUrl,
+            pageParam: {
+		        roomId: roomId,
+		        password:password,
+		        nickname:nickname
+		    },
+		    rect:{
+		        x: 0,
+                y: 0,
+                w: 'auto',
+                h: 'auto'
+		    },
+		    bounces: false,
+		    bgColor: 'rgba(0,0,0,0)',
+		    vScrollBarEnabled:false,
+		    hScrollBarEnabled:false
+		});	
+    }
+
+    
+</script>

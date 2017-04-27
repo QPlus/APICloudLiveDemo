@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>播放</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <style>
+    	body{
+        	background: #FCAEAE;
+        }
+    </style>
+</head>
+<body>
+	
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/jquery.min.js"></script>
+<script type="text/javascript">
+	apiready = function(){
+		//设置为全屏
+		api.setFullScreen({
+		    fullScreen: true
+		});
+		
+		//打开遮罩层页面
+		api.openFrame({
+		    name: 'player_mask',
+		    url: '../html/player_mask.html',
+            pageParam: {
+		        roomId: api.pageParam.roomId,
+		        password:api.pageParam.password,
+		        nickname:api.pageParam.nickname
+		    },
+		    rect:{
+		        x: 0,
+                y: 0,
+                w: 'auto',
+                h: 'auto'
+		    },
+		    bounces: false,
+		    bgColor: 'rgba(0,0,0,0)',
+		    vScrollBarEnabled:false,
+		    hScrollBarEnabled:false
+		});			
+	};
+</script>
+</html>

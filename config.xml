@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<widget id="A6946932739843" version="0.0.1"> 
+  <name>亲加视频直播</name>  
+  <description/>  
+  <author email="yanliang2020@sina.com" href="http://www.apicloud.com">RiceBeanDaddy</author>  
+  <content src="index.html"/>  
+  <preference name="appBackground" value="rgba(0,0,0,0)"/>  
+  <preference name="windowBackground" value="rgba(0,0,0,0)"/>  
+  <preference name="frameBackgroundColor" value="rgba(0,0,0,0)"/>  
+  <preference name="autoLaunch" value="true"/>  
+  <preference name="autoUpdate" value="true"/>  
+  <preference name="smartUpdate" value="false"/>  
+  <preference name="debug" value="true"/>  
+  <preference name="statusBarAppearance" value="true"/>  
+  <permission name="location"/>  
+  <permission name="internet"/>  
+  <access origin="*"/>  
+  <feature name="gotyeLiveCore"> 
+    <param name="appKey" value="7699a0f4df6341349d30f01a3bc66a67"/>  
+    <param name="accessSecret" value="96b62f561b33470b95f961933a37b747"/> 
+  </feature> 
+</widget>
