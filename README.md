@@ -29,6 +29,7 @@
 
 
  	![image](https://github.com/QPlus/APICloudLiveDemo/raw/master/MDImages/filelist.png)
+   
    上图为demo的工程结构，通过html目录可以看到，分别有p2p、player、player_mask、publisher、publisher_mask四个html文件。通过上面的模块说明，我们知道player和player_mask是针对助理及开发者的，publisher和publisher_mask是针对主播的。
    以player为例，player.html页面用来展示直播画面，通过gotyeLivePlayer的play接口的playView参数指定，该页需提前open，并且为frame类型。而player_mask.html用来展示直播画面的遮罩层的功能，比如观看人数、清晰度切换、聊天内容、发送聊天等。gotyeLivePlayer所有的接口都可在player_mask.html里调用
    
