@@ -3,7 +3,7 @@
 <widget id="A6946932739843" version="0.0.1"> 
   <name>亲加视频直播</name>  
   <description/>  
-  <author email="yanliang2020@sina.com" href="http://www.apicloud.com">RiceBeanDaddy</author>  
+  <author email="haofei@gotye.com.cn" href="http://www.apicloud.com">RiceBeanDaddy</author>  
   <content src="index.html"/>  
   <preference name="appBackground" value="rgba(0,0,0,0)"/>  
   <preference name="windowBackground" value="rgba(0,0,0,0)"/>  
