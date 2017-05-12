@@ -21,7 +21,7 @@
    1. 接口调用顺序：接受连麦请求后通过joinRoom接口建立连麦连接，之后可通过leaveRoom接口断开连麦连接
    2. 监听：可根据实际业务需求，监听joinedRoom、connected、disconnected、error等事件并响应
 		
-	您可通过http://docs.apicloud.com/Client-API/Open-SDK/gotyeLiveCore了解亲加通讯云模块的详细说明
+	您可通过http://docs.apicloud.com/Client-API/Open-SDK/gotyeLiveCore 了解亲加通讯云模块的详细信息
 ## 开发注意事项
 1. 在config.xml文件中添加模块配置
  ![image](https://github.com/QPlus/APICloudLiveDemo/raw/master/MDImages/config.png)
