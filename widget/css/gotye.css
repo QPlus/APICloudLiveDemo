@@ -126,6 +126,7 @@
 	margin-top: -80px;
 	left:-60px;
 	display: none;
+	z-index: 999;
 }        
 .console-main{
 	width:44px;

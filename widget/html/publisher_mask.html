@@ -27,7 +27,6 @@
 		<div class="quality-option-item" style="border-bottom: none;" tapmode onclick="onQualityItemClick(this);event.cancelBubble=true;">超清</div>
 	</div>
 	
-	<div class="p2p-btn" id="p2pBtn" tapmode onclick="setP2PUser();event.cancelBubble=true;">连麦</div>
 	<div class="p2p-cancel" id="p2pCancel" tapmode onclick="cancelP2P();event.cancelBubble=true;">取消连麦</div>
 	
 	<img class="console-main" id="consoleMain" src="../image/publisher/hexagon.png" style="background: transparent;left:0;border: none;" tapmode onclick="showConsole();event.cancelBubble=true;"/>
@@ -68,17 +67,31 @@
 	var torchOn=false;
 	var filterOn=false;
 	var screenOrientation='portrait_up';
-	var localId,remoteName;
+	var localId,remoteId;
+	var publishOn=false;
 
 	apiready = function(){
 		//设置屏幕为全屏
 		api.setFullScreen({
 		    fullScreen: true
 		});
+		
+		//监听网络情况
+		api.addEventListener({
+		    name:'offline'
+		}, function(ret, err){        
+		    insertChartContent('sys','系统','网络异常！');
+		});		
+		api.addEventListener({
+		    name:'online'
+		}, function(ret, err){        
+		    insertChartContent('sys','系统','网络恢复！');
+		});
+		
 		api.parseTapmode();
 		
 		//设置全局变量
-		var session = {
+		session = {
 		    roomId: api.pageParam.roomId,
 		    password: api.pageParam.password,
 		    nickname: api.pageParam.nickname
@@ -159,7 +172,9 @@
 		    if (ret) {
 		    	localId=ret.account;
 		    	insertChartContent('sys','系统','连接聊天服务器成功');
-		    	$('#viewerList').prepend('<div class="viewer-list-item aui-ellipsis-1 aui-padded-l-15"><img class="crown" src="../image/publisher/crown.png" />主播</div>');		    	
+				initUserList();		    	
+				//定时刷新用户列表，目前设置是1分钟刷新一次
+		      	setInterval("initUserList()",1000*6);
 		        chat.getRoomMemberCount(function(ret, err) {
 				    if (ret) {
 				        //alert('count'+JSON.stringify(ret));
@@ -178,7 +193,7 @@
 		    if(ret){
 		    	if(ret.extra=='inviteaccept'){
 		    		insertChartContent('sys',ret.sendName,'对方已接受连麦');
-		    		remoteName=ret.sendName;
+		    		remoteId=ret.sendId;
 		    		if(api.systemType=='ios'){    
 				    	api.openFrame({
 						    name: 'p2p',
@@ -229,7 +244,6 @@
 					    name: 'joinedRoom'
 					}, function(ret, err) {
 						insertChartContent('sys','系统','连麦-加入房间成功');
-						$('#p2pBtn').hide();
 						$('#p2pCancel').show();
 					});
 					
@@ -262,9 +276,10 @@
 						name: 'p2p'
 			        });
 					$('#p2pCancel').hide();
-					$('#p2pBtn').show();
-		    	}else
+		    	}else if(ret.extra=='inviterefuse'){
 		    		insertChartContent('user',ret.sendName,'对方已拒绝连麦');
+	    		}else
+	    			insertChartContent('user',ret.sendName,ret.text);
 		    }
 		});
 		
@@ -281,6 +296,27 @@
             });
 		});
 	};		
+	
+	//获取观众总数及观众列表信息
+	function initUserList(){
+		 chat.getRoomMemberCount(function(ret, err) {
+		    if (ret) {
+		        $('#viewerCount').text(ret.count);
+		    }
+		 });
+		 chat.queryUserList({index:1,total:20},function(ret, err) {
+		    if( ret ){
+		         var ht_user='<div class="viewer-list-item aui-ellipsis-1 aui-padded-l-15"><img class="crown" src="../image/publisher/crown.png" />主播</div>';		    	
+		    	 for(var i=0;i<ret.entities.length;i++){
+		    	 	ht_user+=
+		    	 		'<div class="viewer-list-item aui-ellipsis-1" data-account="'+ret.entities[i].account+'" tapmode onclick="onUserClick(this);event.cancelBubble=true;">'+ret.entities[i].nickname+'</div>';    	 	
+		    	 }
+		    	 $('#viewerList').html(ht_user);
+		    }else{
+		         alert( JSON.stringify( err ) );
+		    }
+		});
+	}
 	
 	function insertChartContent(type,sender,content){
 		if(type=='sys')
@@ -408,21 +444,25 @@
 	
 	function showViewerList(){
 		$('#viewerListBtn').hide();
-		$('#viewerList').show();
-		$('#p2pBtn').hide();
+		setTimeout(function() {
+            $('#viewerList').show()
+        },
+        300)
 	}
 	
 	function hideViewerList(){
 		$('#viewerListBtn').show();
 		$('#viewerList').hide();
-		$('#p2pBtn').show();
 	}
 	
 	
 	function showConsole(){
 		$('#consoleMain').hide();
 		$('#consoleMain').css('background','transparent');
-		$('#consoleMainBtn').css('background','#56B363');
+		if(!publishOn)
+			$('#consoleMainBtn').css('background','#56B363');
+		else
+			$('#consoleMainBtn').css('background','#C76B5C');
 		$('#console').show();
 	}
 	
@@ -435,9 +475,17 @@
 	
 	//开启直播
 	function startPublisher(tag){
-		insertChartContent('sys','系统','开始直播');    
-		$(tag).css('background','#C76B5C');
-		publisher.publish();
+		if(!publishOn){
+			insertChartContent('sys','系统','开始直播');    
+			$(tag).css('background','#C76B5C');
+			publisher.publish();
+			publishOn=true;
+		}else{
+			insertChartContent('sys','系统','停止直播');    
+			$(tag).css('background','#56B363');
+			publisher.unpublish();
+			publishOn=false;
+		}
 	}
 	
 	//设置前后摄像头
@@ -521,8 +569,60 @@
 		});
 	}
 	
-	function openP2P(nickname){
-		chat.sendMessage({text: nickname,extra:'invitep2p'}, function(ret, err) {
+	function onUserClick(tag){
+		var dialogBox = api.require('dialogBox');
+		dialogBox.alert({
+		    texts: {
+		        content: $(tag).text(),
+		        leftBtnTitle: '连麦',
+		        rightBtnTitle: '取消'
+		    },
+		    styles: {
+		        bg: 'rgba(0,0,0,0.5)',
+		        corner: 5,
+		        w: 230,
+		        content: {
+		            color: '#FFFFFF',
+		            size: 14
+		        },
+		        left: {
+		            marginB: 15,
+		            marginL: 10,
+		            w: 80,
+		            h: 30,
+		            corner: 5,
+		            bg: '#9F61E8',
+		            color: '#FFFFFF',
+		            size: 12
+		        },
+		        right: {
+		            marginB: 15,
+		            marginL: 50,
+		            w: 80,
+		            h: 30,
+		            corner: 5,
+		            bg: '#DDDDDD',
+		            color: '#999999',
+		            size: 12
+		        }
+		    }
+		}, function(ret) {
+		    if (ret.eventType == 'left') {
+		    	setP2PUser(tag);
+		        dialogBox.close({
+		            dialogName: 'alert'
+		        });
+		    }else if (ret.eventType == 'right') {
+		        dialogBox.close({
+		            dialogName: 'alert'
+		        });
+		    }
+		});
+	}
+	
+	function setP2PUser(tag){
+		var account=$(tag).attr('data-account');
+		chat.sendNotify({notify: account,extra:'invitep2p'}, function(ret, err) {
 		    if (ret) {
 		        api.toast({
 				    msg: '邀请已发出',
@@ -538,77 +638,17 @@
 		    }
 		});
 	}
-	
-	//输入要连麦的用户昵称
-	function setP2PUser(){
-		var dialogBox = api.require('dialogBox');
-		dialogBox.input({
-		    keyboardType: 'default',
-		    texts: {
-		        title: '连麦邀请',
-		        placeholder: '输入对方的昵称',
-		        leftBtnTitle: '确定',
-		        rightBtnTitle: '取消'
-		    },
-		    styles: {
-		        bg: '#fff',
-		        corner: 5,
-		        w: 230,
-		        h: 150,
-		        title: {
-		            h: 50,
-		            alignment: 'center',
-		            size: 14,
-		            color: '#000'
-		        },
-		        input: {
-		            h: 50,
-		            marginUD: 6,
-		            textSize: 14,
-		            textColor: '#333333'
-		        },
-		        dividingLine: {
-		            width: 0.5,
-		            color: '#696969'
-		        },
-		        left: {
-		            h: 40,
-		            bg: '#9F61E8',
-		            color: '#FFFFFF',
-		            size: 12
-		        },
-		        right: {
-		            h: 40,
-		            bg: '#DDDDDD',
-		            color: '#999999',
-		            size: 12
-		        }
-		    }
-		}, function(ret) {
-		    if (ret.eventType == 'left') {
-		    	openP2P(ret.text);
-		        dialogBox.close({
-		            dialogName: 'input'
-		        });		        
-		    }else if (ret.eventType == 'right') {
-		        dialogBox.close({
-		            dialogName: 'input'
-		        });
-		    }
-		});
-	}
-	
+		
 	//取消连麦
 	function cancelP2P(){
 		//先通知对方连麦已取消
-		chat.sendMessage({text: remoteName,extra:'cancelp2p'}, function(ret, err) {
+		chat.sendNotify({notify: remoteId,extra:'cancelp2p'}, function(ret, err) {
 		    if (ret) {
 				p2p.leaveRoom();
 				api.closeFrame({
 					name: 'p2p'
 		        });
 				$('#p2pCancel').hide();
-				$('#p2pBtn').show();
 		    }else{
 		    	//通知失败则提示取消连麦失败
 				api.toast({

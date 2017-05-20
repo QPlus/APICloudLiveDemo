@@ -39,6 +39,16 @@
 		    width:70%;
         	margin-left:15%; 
 		}
+		.set{	
+			margin-top:1rem;
+		    text-align: right;
+		    color: #333333;
+		    font-size: 0.7rem;              
+		    height:2.2rem;
+		    line-height: 2.2rem;       
+		    border-radius: 0.25rem;        
+        	margin-right:15%; 
+		}
     </style>
 </head>
 <body>
@@ -54,6 +64,7 @@
         	<input type="text" id="nickname" placeholder="昵称" value="主播">
     	</div>
     	<div class="solidBtn"  tapmode onClick="check();">登录</div>
+    	<div class="set" tapmode onclick="openSettings()">高级设置</div>
 	</div>
 </body>
 </html>
@@ -68,7 +79,7 @@
         //保持屏幕唤醒
         api.setKeepScreenOn({
 		    keepOn: true
-		});
+		});		
     }
     
     function check(){
@@ -94,6 +105,15 @@
 		    nickname: nickname
 		};
 		core = api.require('gotyeLiveCore');
+		
+		//看看是否设置有appkey及accesssecret，若有则取出
+		var settings=$api.getStorage('settings');	
+		if(settings){
+			core.registerApp({
+			    appKey: settings.appKey,
+			    accessSecret: settings.accessSecret
+			});
+		}
 		core.setDebugLogEnabled({
 		    enabled: true
 		});
@@ -139,6 +159,15 @@
 		    bgColor: 'rgba(0,0,0,0)',
 		    vScrollBarEnabled:false,
 		    hScrollBarEnabled:false
+		});	
+    }
+    
+    function openSettings(){
+    	api.openWin({
+			name : 'settings_win',
+			url : './html/settings_win.html',
+			allowEdit:true,
+			slidBackEnabled:true
 		});	
     }
 

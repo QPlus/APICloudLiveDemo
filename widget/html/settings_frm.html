@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>设置frm</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <style>
+    	.solidBtn{	
+			margin-top:2rem;		
+		    text-align: center;
+		    background: #FCAEAE;
+		    color: #FFFFFF;
+		    font-size: 0.8rem;              
+		    height:2.2rem;
+		    line-height: 2.2rem;       
+		    border-radius: 0.25rem;        
+		    width:70%;
+        	margin-left:15%; 
+		}
+		.borderBtn{	
+			margin-top:1rem;		
+		    text-align: center;
+		    background: #FFFFFF;
+		    color: #666666;
+		    border:1px #DDDDDD solid;
+		    font-size: 0.8rem;              
+		    height:2.2rem;
+		    line-height: 2.2rem;       
+		    border-radius: 0.25rem;        
+		    width:70%;
+        	margin-left:15%; 
+		}
+    </style>
+</head>
+<body>
+	<div class="aui-content">	
+	    <ul class="aui-list aui-form-list">
+		    <li class="aui-list-item">
+		    	<div class="aui-list-item-inner">
+			    	<div class="aui-list-item-input">
+			        	<textarea class="aui-font-size-14" id="appKey" placeholder="请输入appKey"></textarea>
+		        	</div>
+	        	</div>
+		    </li>
+		    <li class="aui-list-item">
+		    	<div class="aui-list-item-inner">
+			    	<div class="aui-list-item-input">
+			        	<textarea class="aui-font-size-14" id="accessSecret" placeholder="请输入accessSecret"></textarea>
+		        	</div>
+	        	</div>
+		    </li>
+	    </ul>
+	    <div class="solidBtn"  tapmode onClick="save();">保存</div>
+	    <div class="borderBtn"  tapmode onClick="clearData();">清空</div>
+	</div>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/jquery.min.js"></script>
+<script type="text/javascript">
+	apiready = function(){
+		//初始化设置内容
+		var settings=$api.getStorage('settings');	
+		if(settings){
+			$('#appKey').val(settings.appKey);
+			$('#accessSecret').val(settings.accessSecret);
+		}
+		api.parseTapmode();
+	};
+	
+	function save(){
+		var appKey=$('#appKey').val();
+		var accessSecret=$('#accessSecret').val();
+		
+		if(appKey== '' || appKey.match(/^\s+$/g)){
+			api.alert({msg:'请输入appKey'
+            });
+            return;
+		}else if(accessSecret== '' || accessSecret.match(/^\s+$/g)){
+			api.alert({msg:'请输入accessSecret'
+            });
+            return;
+		}
+		
+		//将设置内容存到本地
+		var settings = {};
+		settings.appKey=appKey;
+		settings.accessSecret=accessSecret;
+		$api.setStorage('settings', settings);
+		
+		api.alert({msg:'保存成功'
+        },function(ret,err){
+        	if(ret.buttonIndex=='1'){
+        		api.closeWin({
+                });
+        	}
+        });
+	}
+	
+	function clearData(){
+		api.confirm({
+		    msg: '确定清空吗',
+		    buttons: ['确定', '取消']
+		}, function(ret, err) {
+		    if(ret.buttonIndex=='1'){
+		    	$('#appKey').val('');
+				$('#accessSecret').val('');
+				$api.rmStorage('settings');	
+		    }
+		});
+	}
+
+</script>
+</html>

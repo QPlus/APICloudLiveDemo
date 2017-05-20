@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>设置win</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <style>
+    	body{
+    		
+    	}
+    </style>
+</head>
+<body>
+	<header class="aui-bar aui-bar-nav" id="header" style="background: #FCAEAE;">
+        <a class="aui-pull-left aui-btn" tapmode onclick="closeWin()">
+	        <span class="aui-iconfont aui-icon-left"></span>
+	    </a>
+        <div class="aui-title" id="title">高级设置</div>  
+    </header>	
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/jquery.min.js"></script>
+<script type="text/javascript">
+	apiready = function(){
+		var header = $api.byId('header');
+		$api.fixStatusBar(header); 
+        
+        var headerPos = $api.offset(header);    
+
+        api.openFrame({
+		    name: 'settings_frm',
+		    url: '../html/settings_frm.html',
+		    rect:{
+		        x: 0,
+                y: headerPos.h,
+                w: 'auto',
+                h: 'auto'
+		    },
+		    bounces: false,
+		    allowEdit:true,
+		    bgColor: 'rgba(0,0,0,0)',
+		    vScrollBarEnabled:false,
+		    hScrollBarEnabled:false
+		});
+		api.parseTapmode();
+	};
+	
+	function closeWin(){
+		api.closeWin({
+        });
+	}
+	
+</script>
+</html>

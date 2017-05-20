@@ -44,6 +44,18 @@
 	var localId;
 	
 	apiready = function(){
+		//监听网络情况
+		api.addEventListener({
+		    name:'offline'
+		}, function(ret, err){        
+		    insertChartContent('sys','系统','网络异常！');
+		});		
+		api.addEventListener({
+		    name:'online'
+		}, function(ret, err){        
+		    insertChartContent('sys','系统','网络恢复！');
+		});
+		
 		api.parseTapmode();
 		
 		//设置session
@@ -128,10 +140,10 @@
 		    if(ret){
 		    	//alert(JSON.stringify(ret));
 		    	if(ret.extra=='invitep2p'){
-		    		if(ret.text==api.pageParam.nickname)
+		    		if(ret.text==localId)
 		    			openP2P(ret.sendId);
 		    	}else if(ret.extra=='cancelp2p'){
-		    		if(ret.text==api.pageParam.nickname){
+		    		if(ret.text==localId){
 		    			p2p.leaveRoom();
 						api.closeFrame({
 							name: 'p2p'
@@ -458,7 +470,7 @@
 				});
 				
 				//接受连麦邀请后，发送一个接受的消息给主播端，然后主播端也调用joinRoom方法，加入连麦
-				chat.sendMessage({text: api.pageParam.nickname,extra:'inviteaccept'}, function(ret, err) {
+				chat.sendNotify({notify: localId,extra:'inviteaccept'}, function(ret, err) {
 					if (err) {
 				        api.toast({
 						    msg: '连麦失败',
@@ -472,7 +484,7 @@
 		        });
 		    }else if (ret.eventType == 'right') {
 		    	//拒绝连麦邀请后，发送一个拒绝的消息给主播端，通知直播已被拒绝
-		        chat.sendMessage({text: api.pageParam.nickname,extra:'inviterefuse'}, function(ret, err) {});
+		        chat.sendNotify({notify: localId,extra:'inviterefuse'}, function(ret, err) {});
 				dialogBox.close({
 		            dialogName: 'alert'
 		        });
@@ -482,7 +494,7 @@
 	
 	//取消连麦
 	function cancelP2P(){
-		chat.sendMessage({text: '取消连麦',extra:'cancelp2p'}, function(ret, err) {
+		chat.sendNotify({notify: '取消连麦',extra:'cancelp2p'}, function(ret, err) {
 		    if (ret) {
 				p2p.leaveRoom();
 				api.closeFrame({
