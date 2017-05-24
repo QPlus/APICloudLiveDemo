@@ -24,6 +24,7 @@
 		<div class="quality-option-item" tapmode onclick="onQualityItemClick(this);event.cancelBubble=true;">标清</div>
 		<div class="quality-option-item" style="border-bottom: none;" tapmode onclick="onQualityItemClick(this);event.cancelBubble=true;">高清</div>
 	</div>
+	<div class="set-screen" tapmode onclick="setScreen();event.cancelBubble=true;"><img src="../image/publisher/screen.png"/></div>
 	
 	<div class="p2p-cancel" id="p2pCancel" tapmode onclick="cancelP2P();event.cancelBubble=true;">取消连麦</div>
 	
@@ -42,6 +43,7 @@
 	var quality;
 	var qualityOpen=false;
 	var localId;
+	var screenOrientation='portrait_up';
 	
 	apiready = function(){
 		//监听网络情况
@@ -503,6 +505,19 @@
 				$('#p2pCancel').hide();
 		    }
 		});		
+	}
+	
+	//设置横屏竖屏
+	function setScreen(){
+		if(screenOrientation=='portrait_up'){
+			screenOrientation='landscape_left';
+		}else{
+			screenOrientation='portrait_up';
+		}
+		
+		api.setScreenOrientation({
+		    orientation: screenOrientation
+		});
 	}
 	
 </script>

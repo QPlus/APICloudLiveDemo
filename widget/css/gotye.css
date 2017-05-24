@@ -244,3 +244,21 @@ input[type="text"]{
 	color:#e51c23;
 	text-shadow: 1px 1px 1px #333333;
 }
+.set-screen{
+	width:55px;
+	height:30px;
+	line-height:30px;
+	background: rgba(0,0,0,0.5);
+	position: absolute;
+	left:100px;
+	top:60px;	
+	border-radius: 5px;
+	font-size: 12px;
+	color:#FFFFFF;
+	padding-left:15px;
+}
+.set-screen img{
+	width:25px;
+	margin-top:2px;
+	position:absolute;
+}
