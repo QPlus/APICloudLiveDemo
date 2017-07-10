@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<widget id="A6949021144345" version="0.0.1"> 
+<widget id="A6949030839664" version="0.0.1"> 
   <name>亲加视频直播</name>  
   <description/>  
   <author email="haofei@gotye.com.cn" href="http://www.apicloud.com">RiceBeanDaddy</author>  
@@ -17,7 +17,7 @@
   <permission name="internet"/>  
   <access origin="*"/>  
   <feature name="gotyeLiveCore"> 
-    <param name="appKey" value="7699a0f4df6341349d30f01a3bc66a67"/>  
-    <param name="accessSecret" value="96b62f561b33470b95f961933a37b747"/> 
+    <param name="appKey" value="405e24f18b95420eb5d33714e69ef243"/>  
+    <param name="accessSecret" value="efb647800b624fef8ce3bb3f0f95a065"/> 
   </feature> 
 </widget>
